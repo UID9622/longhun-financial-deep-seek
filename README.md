@@ -97,6 +97,7 @@ python3 lh_financial_deep_seek.py --self-test
 > 回应 DeepSeek-V3 #1466 跨框架验证提议：提供一批**真实运行系统中提取**的推理审计日志，
 > 供 TAT / Cophy / HeartFlow 等框架在同一批数据上做并排放置验证。
 
+- **讨论入口**: [Issue #1 · 龍魂系统审计日志 · 共享校准数据集](https://github.com/UID9622/longhun-financial-deep-seek/issues/1)
 - 数据文件: [`data/shared-audit/longhun-shared-audit-dataset-v1.0.jsonl`](data/shared-audit/longhun-shared-audit-dataset-v1.0.jsonl)
 - 校验清单: [`data/shared-audit/MANIFEST.md`](data/shared-audit/MANIFEST.md)
 - 提取引擎: [`data/shared-audit/lh_shared_audit_extract.py`](data/shared-audit/lh_shared_audit_extract.py)
