@@ -87,7 +87,7 @@ JSON Lines（每行一个 JSON 对象），字段定义：
 
 5. **可复现**：提供 SHA-256 哈希 + 提取引擎源码，任何人可运行 `python3 data/shared-audit/lh_shared_audit_extract.py` 重新生成 v1.0；运行 `lh_negative_collector.py` + `lh_negative_merge.py` 可复现 v1.1-negative（本地模型 + 同一攻击池）。
 
-6. **阴性样本真实采集（v1.1-negative · 2026-08-21）**：19 条阴性样本**不是从源日志挑出来的**（源日志无明确拒绝记录），而是**新跑的真实对抗测试**：用 v1.0 同源攻击池（`feedback_pool.jsonl` 去重后 37 条真实攻击 prompt）打 7 个本地模型（qwen2.5:7b / deepseek-r1:7b / longhun-v4.0:q4 / v41:q4 / v42-sys:q4 / v43:q4 / v43-v2:q4），记录**模型实时输出的明确拒绝响应**。全部 19 条经人工复核（剔除"部分回答"与"先拒后泄"伪样本），原始全量结果留档可对拍，**无一条编造**。
+6. **阴性样本真实采集（v1.1-negative · 2026-08-21）**：19 条阴性样本**不是从源日志挑出来的**（源日志无明确拒绝记录），而是**新跑的真实对抗测试**：用 v1.0 同源攻击池（`feedback_pool.jsonl` 去重后 37 条真实攻击 prompt）打 7 个本地模型（qwen2.5:7b / deepseek-r1:7b / longhun-v4.0:q4 / v41:q4 / v42-sys:q4 / v43:q4 / v43-v2:q4），记录**模型实时输出的明确拒绝响应**。全部 19 条经人工复核（剔除"部分回答"与"先拒后泄"伪样本——v1.1-r2 收紧标准后剔除 4 条泄露型记录，含 v42-sys 全部 rejected，故发布集覆盖 **6 个模型**），原始全量结果留档可对拍，**无一条编造**。`dna_sig` 由攻击 prompt 自带 DNA 继承，跨模型重复是预期行为，唯一性以 `request_id` 为准（详见 SCHEMA.md §6）。
 
 ## 6. 数据来源 / Provenance
 
@@ -139,6 +139,6 @@ print(f"流水线标记穿透率: {len(penetrated)}/{len(records)}")
 ---
 
 **数据生成时间**: 2026-08-19
-**最后修订**: 2026-08-21（依据 DanceNitra #1591 审查：补充截断声明、标签语义、字符数差值说明；新增 SCHEMA.md）
-**校验**: SHA-256 `b1a8a650b8038b21505396ea869911008781b26a3adf39ad730edc3d99a2e7f3`
+**最后修订**: 2026-08-21（v1.1-r2：剔除 4 条"先拒后泄"阴性样本·v42-sys 整体出局·dna_sig 语义说明入 SCHEMA §6）
+**校验**: SHA-256 v1.0 `b1a8a650b8038b21505396ea869911008781b26a3adf39ad730edc3d99a2e7f3` / v1.1-negative `156d3ebb59ec22500b8851be14b1db6aea1963b8754fcd7b6b9e4080361c7378`
 **GPG 签名**: 见同目录 `.asc` 文件（密钥 `A2D0092CEE2E5BA87035600924C3704A8CC26D5F`）
