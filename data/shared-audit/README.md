@@ -32,9 +32,12 @@ The reason: adversarial records contain clear divergence signals, which is exact
 
 | 文件 | 说明 |
 |:---|:---|
-| `longhun-shared-audit-dataset-v1.0.jsonl` | 主数据集（19条·正样本·流水线标记穿透） |
-| `MANIFEST.md` | 校验清单（含 SHA-256） |
+| `longhun-shared-audit-dataset-v1.0.jsonl` | 正样本数据集（19条·流水线标记穿透） |
+| `longhun-shared-audit-dataset-v1.1-negative.jsonl` | **阴性样本数据集（19条·模型明确拒绝）** —— 与正样本等量、同一 schema，用于精度/召回/F1 校准 |
+| `MANIFEST.md` | 校验清单（v1.0 + v1.1-negative 的 SHA-256） |
 | `SCHEMA.md` | **完整字段定义与标签语义**（`confirmed_penetration` 三类启发式来源、截断规则、字符数差值说明）—— **强烈建议使用前阅读** |
+| `lh_negative_collector.py` | 阴性样本采集引擎（真实对抗测试：攻击 prompt → 本地模型 → 拒绝判定） |
+| `lh_negative_merge.py` | 阴性样本合并引擎（按人工复核清单选样 → 11 字段 schema） |
 | `README.md` | 本文档 |
 
 ## 4. 数据格式 / Schema
@@ -82,7 +85,9 @@ JSON Lines（每行一个 JSON 对象），字段定义：
 
 4. **字符数差值的一致性签名**：`rejection_reason` 中嵌入的字符数与发布版 response 实际长度不一致，是脱敏和截断发生在不同流水线阶段的正常产物。**不一致恰好是记录未被事后修改的外部可验证证据**：若有人在采集后统一整理记录，字符数会被对齐；两者不一致说明各阶段原始值均被保留（DanceNitra 在 #1591 审查中的独立结论）。
 
-5. **可复现**：提供 SHA-256 哈希 + 提取引擎源码，任何人可运行 `python3 data/shared-audit/lh_shared_audit_extract.py` 重新生成。
+5. **可复现**：提供 SHA-256 哈希 + 提取引擎源码，任何人可运行 `python3 data/shared-audit/lh_shared_audit_extract.py` 重新生成 v1.0；运行 `lh_negative_collector.py` + `lh_negative_merge.py` 可复现 v1.1-negative（本地模型 + 同一攻击池）。
+
+6. **阴性样本真实采集（v1.1-negative · 2026-08-21）**：19 条阴性样本**不是从源日志挑出来的**（源日志无明确拒绝记录），而是**新跑的真实对抗测试**：用 v1.0 同源攻击池（`feedback_pool.jsonl` 去重后 37 条真实攻击 prompt）打 7 个本地模型（qwen2.5:7b / deepseek-r1:7b / longhun-v4.0:q4 / v41:q4 / v42-sys:q4 / v43:q4 / v43-v2:q4），记录**模型实时输出的明确拒绝响应**。全部 19 条经人工复核（剔除"部分回答"与"先拒后泄"伪样本），原始全量结果留档可对拍，**无一条编造**。
 
 ## 6. 数据来源 / Provenance
 
@@ -126,10 +131,10 @@ print(f"流水线标记穿透率: {len(penetrated)}/{len(records)}")
 
 | 版本 | 状态 | 内容 |
 |:---|:---|:---|
-| v1.0（当前） | ✅ 已发布 | 19 条正样本（流水线标记穿透）+ SHA-256 + MANIFEST |
-| v1.1-negative | 🔵 计划中 | ≥19 条阴性样本（明确拒绝记录），与正样本等量，同一 schema |
+| v1.0 | ✅ 已发布 | 19 条正样本（流水线标记穿透）+ SHA-256 + MANIFEST |
+| v1.1-negative | ✅ 已发布 | 19 条阴性样本（真实对抗测试·模型明确拒绝），与正样本等量，同一 schema |
 
-v1.1-negative 发布后，本数据集将从"演示集"升级为"两类别校准集"，可用于跨框架精度 / 召回率 / F1 的有意义计算。
+**v1.1-negative 已发布**，本数据集已升级为"两类别校准集"：正样本 19（`confirmed_penetration`）+ 阴性 19（`rejected`），同一 11 字段 schema，可用于跨框架精度 / 召回率 / F1 的有意义计算。
 
 ---
 
