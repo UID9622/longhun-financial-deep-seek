@@ -1,0 +1,5 @@
+# 归属名: 诸葛鑫 | UID9622 · 龍芯北辰
+# DNA: #龍芯⚡️丙午·丙申·乙丑·亥时·䷽小过-GITIGNORE-v1.0
+__pycache__/
+*.pyc
+.DS_Store
