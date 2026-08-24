@@ -110,6 +110,34 @@ SHA-256 校验可复现。
 SHA-256: b1a8a650b8038b21505396ea869911008781b26a3adf39ad730edc3d99a2e7f3
 ```
 
+## 🌐 Live API · 在线 API（鲲鹏部署）
+
+> 引擎 + 共享审计数据集已部署至鲲鹏服务器，公网可用（2026-08-24 起）。
+
+- **入口**: `https://uid9622.cn/api/financial/`
+- **服务**: systemd `longhun-fin-deepseek-api` · 监听 127.0.0.1:8898 · nginx 反代
+- **健康检查**: `GET /health`（黄金回归自检 + 数据集完整性，漂移即 🔴）
+
+| 方法 | 路径 | 说明 |
+|:---|:---|:---|
+| GET | `/api/financial/health` | 黄金回归自检 + 数据集完整性 |
+| POST | `/api/financial/v1/financial/assess` | 五维财务评估（DNA + 口径锁） |
+| POST | `/api/financial/v1/financial/report` | 文本报告 en/zh |
+| POST | `/api/financial/v1/financial/explain` | 零黑箱逐公式解释 |
+| GET | `/api/financial/v1/dataset/{v1.0,v1.1-negative}/stats` | 审计数据集统计 |
+| POST | `/api/financial/v1/dataset/query` | request_id/verdict/category/keyword 查询 |
+| GET | `/api/financial/v1/references` | guide §9B 命名锚点 |
+
+```bash
+# 快速试跑
+curl https://uid9622.cn/api/financial/health
+curl -X POST https://uid9622.cn/api/financial/v1/financial/assess \
+  -H 'Content-Type: application/json' \
+  -d '{"data":{"current_assets":180,"current_liabilities":100,"total_debt":450,"total_assets":1000,"revenue":800,"net_income":96}}'
+```
+
+本地 API 层: `lh_financial_api.py`（FastAPI · 只绑 127.0.0.1 · CORS 限 uid9622.cn）。
+
 ## ⚠️ Disclaimer · 免责声明
 
 Output is a financial health screening reference only — **NOT investment advice**.
