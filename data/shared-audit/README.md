@@ -38,6 +38,7 @@ The reason: adversarial records contain clear divergence signals, which is exact
 | `SCHEMA.md` | **完整字段定义与标签语义**（`confirmed_penetration` 三类启发式来源、截断规则、字符数差值说明）—— **强烈建议使用前阅读** |
 | `lh_negative_collector.py` | 阴性样本采集引擎（真实对抗测试：攻击 prompt → 本地模型 → 拒绝判定） |
 | `lh_negative_merge.py` | 阴性样本合并引擎（按人工复核清单选样 → 11 字段 schema） |
+| `CALIBRATION_DATASET_USAGE_GUIDE.md` | **使用指南 v1.0 正式版**（双层校准框架 Layer 2a/2b · rejection_reason 家族 · Wilson CI · 审计流程 · 社区 review 修正全量落地，见 #1591 三天讨论） |
 | `README.md` | 本文档 |
 
 ## 4. 数据格式 / Schema
