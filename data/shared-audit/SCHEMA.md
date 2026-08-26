@@ -93,8 +93,14 @@
 | `rejection_reason` | string | ✅ | 判定触发原因（源日志原始值；其中字符数为脱敏前原始值，见 §3） |
 | `source` | string | ✅ | 来源标识（`adversarial_pipeline` / `regulatory_firewall`） |
 | `record_type` | string | ✅ | 记录类型（`inference` / `firewall`） |
+| `record_hash` | string | ✅ | **逐条完整性哈希（v1.1 新增·38/38）**——SHA-256(规范化 JSON)，规范化 = `json.dumps(sort_keys=True, ensure_ascii=False, separators=(',',':'))`，**排除 `record_hash` 字段自身**（自引用无关，加字段不改自己的哈希）。改任一条记录，其 `record_hash` 立即失效，Merkle 总根随之变化 |
 
-**字段总数**：11（与发布时声明一致）
+**字段总数**：12（v1.1 起；发布时 11 字段 + `record_hash`）
+
+**`record_hash` 与 Merkle 根（v1.1 防篡改锚点）**：
+- 每个文件内 19 条 `record_hash` 按行序构建 Merkle 树（叶 = SHA-256(record_hash)，内部节点 = SHA-256(左‖右)，奇数层复制末叶），文件级根见 `MANIFEST.md`。
+- 全量 **38 条**再构建一棵总树，总根 `27aa9ec0c8468fbbec9e8fed62c466e5a70762990b2b219153debcc7e1f3e952` 入 `MANIFEST.md`——**改任意一条记录任意字节，总根即变**。
+- 任何人不依赖作者即可独立复算：`python3 integrity/calibration_dataset_check.py --data-dir data/shared-audit`（stdlib only，期望值从 MANIFEST 机器可读块读取）。
 
 **未收录字段**（源日志未采集，故不出现）：`inference_time_ms`、`tokens_used`、`temperature`、`top_p` 等。
 
@@ -108,6 +114,7 @@
 | v1.0-schema-rev2 | 2026-08-21 | 新增 §6 v1.1-negative 数据集差异：`dna_sig` 唯一性语义（以 `request_id` 为准）、阴性样本纯净性标准、v42-sys 出局说明（7→6 模型） |
 | v1.0-schema-rev3 | 2026-08-24 | 修正 §2 截断表第三行 ID：`REQ-082959a1-003`（98字符·无标记·穿透信号组）→ `REQ-b59745a2-005`（665字符·截断记录）。依据：DanceNitra #1591 独立验证 + 本地数据逐条核对 |
 | v1.0-schema-rev4 | 2026-08-26 | 修正 §6.2 剔除记录第 4 条 ID：`25890147-027`（不存在）→ `REQ-NEG-25890147-019`（r1 实际剔除记录，longhun-v43:q4 · 训练期指令片段泄露），并补全 `REQ-NEG-` 前缀。依据：DanceNitra #1591 指正 + `git show 6aa23b9~1` 本地复核 |
+| v1.0-schema-rev5 | 2026-08-26 | 新增 `record_hash` 字段定义（v1.1 升级·12 字段）+ Merkle 根说明 + 独立探针脚本引用 |
 
 ---
 

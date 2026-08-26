@@ -34,12 +34,22 @@ The reason: adversarial records contain clear divergence signals, which is exact
 |:---|:---|
 | `longhun-shared-audit-dataset-v1.0.jsonl` | 正样本数据集（19条·流水线标记穿透） |
 | `longhun-shared-audit-dataset-v1.1-negative.jsonl` | **阴性样本数据集（19条·模型明确拒绝）** —— 与正样本等量、同一 schema，用于精度/召回/F1 校准 |
-| `MANIFEST.md` | 校验清单（v1.0 + v1.1-negative 的 SHA-256） |
-| `SCHEMA.md` | **完整字段定义与标签语义**（`confirmed_penetration` 三类启发式来源、截断规则、字符数差值说明）—— **强烈建议使用前阅读** |
+| `MANIFEST.md` | **完整性清单 v1.1**（双文件 per-file SHA-256 + 记录数 + 文件级/全量 Merkle 根 + 机器可读 META 块） |
+| `SCHEMA.md` | **完整字段定义与标签语义**（`confirmed_penetration` 三类启发式来源、截断规则、字符数差值说明、`record_hash` 定义）—— **强烈建议使用前阅读** |
 | `lh_negative_collector.py` | 阴性样本采集引擎（真实对抗测试：攻击 prompt → 本地模型 → 拒绝判定） |
 | `lh_negative_merge.py` | 阴性样本合并引擎（按人工复核清单选样 → 11 字段 schema） |
+| `CHANGELOG.jsonl` | **修订链（append-only）**——每次发布/剔除/升级有据可查，防"后来改口" |
+| `archive/README.md` | 剔除记录诚实留档（v1.1-r2 剔除 4 条"先拒后泄"的说明与原始数据状态） |
 | `CALIBRATION_DATASET_USAGE_GUIDE.md` | **使用指南 v1.0 正式版**（双层校准框架 Layer 2a/2b · rejection_reason 家族 · Wilson CI · 审计流程 · 社区 review 修正全量落地，见 #1591 三天讨论） |
 | `README.md` | 本文档 |
+
+**独立验证**（任何人可运行，不依赖作者自报）：
+
+```bash
+# stdlib only · 期望值从 MANIFEST.md 机器可读块读取 · 输出 18 项 PASS/FAIL
+python3 integrity/calibration_dataset_check.py --data-dir data/shared-audit
+# CI 已接：push/PR 触及数据或探针时自动跑，FAIL 即红（.github/workflows/integrity.yml）
+```
 
 ## 4. 数据格式 / Schema
 
@@ -111,6 +121,15 @@ variants = [r for r in records if "编码绕过" in r["attack_category"]]
 # 精确计算请按 rejection_reason 前缀拆分三类来源（见 SCHEMA.md §1）
 penetrated = [r for r in records if r["verdict"] == "confirmed_penetration"]
 print(f"流水线标记穿透率: {len(penetrated)}/{len(records)}")
+
+# 逐条防篡改校验：record_hash 可独立复算（排除自身字段的规范化 JSON SHA-256）
+import hashlib, json as _json
+def recompute(r):
+    clean = {k: v for k, v in r.items() if k != "record_hash"}
+    canonical = _json.dumps(clean, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+assert all(recompute(r) == r["record_hash"] for r in records), "record_hash mismatch!"
+# 全量 38 条 Merkle 根（含 v1.1-negative）见 MANIFEST.md，CI 自动守门
 ```
 
 ## 8. 关联上下文 / Context

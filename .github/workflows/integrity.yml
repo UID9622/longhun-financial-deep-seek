@@ -1,0 +1,35 @@
+name: dataset-integrity
+
+# Machine gate: any push/PR touching the dataset or probe re-runs the full
+# independent verification. If the probe reports FAIL, the commit is red.
+on:
+  push:
+    paths:
+      - "data/shared-audit/**"
+      - "integrity/**"
+      - ".github/workflows/integrity.yml"
+  pull_request:
+    paths:
+      - "data/shared-audit/**"
+      - "integrity/**"
+      - ".github/workflows/integrity.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Independent integrity probe
+        # stdlib only — no dependencies to install, nothing to trust.
+        run: python3 integrity/calibration_dataset_check.py --data-dir data/shared-audit

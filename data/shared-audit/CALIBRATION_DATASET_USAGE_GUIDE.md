@@ -203,6 +203,8 @@
 >
 > **已收**：Cophy 案例（@icophy，2026-08-24）——Same Layer 1 scores, opposite Layer 2 findings，待并入本小节（结构如有变动由指南维护者负责对齐）。
 
+> **v1.1 更新（2026-08-26）**：探针升级为 **10 项独立检查（C01–C10）**——行数、JSON 合法性、request_id 唯一性、必填字段、per-file SHA-256、逐条 `record_hash` 复算、文件级 + 全量 38 条 Merkle 根、密钥扫描。期望值从 `MANIFEST.md` 机器可读块读取（单一真相源），并已接入 CI 守门（`.github/workflows/integrity.yml`，push/PR 触及数据即自动跑）。**当前状态 18 PASS / 0 FAIL**。上文 "4 PASS/1 FAIL/1 UNVERIFIABLE" 为 DanceNitra 当日审计的**历史记录**，保留作对照（当时 truncated-id 不一致已在 SCHEMA rev3 修正）。
+
 ---
 
 ## 3️⃣ 绝对不能用它做什么（Anti-patterns）
