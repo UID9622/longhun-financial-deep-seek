@@ -1,13 +1,13 @@
 # 📋 社区校准数据集使用指南 v1.0（正式版）
 # Community Calibration Dataset Usage Guide
 
-> **DNA**: `#龍芯⚡️丙午·丙申·甲子·亥时-CALIBRATION-GUIDE-v1.0-UID9622`
+> **DNA**: `#龍芯⚡️丙午·丙申·甲子·亥时-CALIBRATION-GUIDE-v1.2-UID9622`
 > **创建者**: 诸葛鑫（UID9622）
 > **归属名**: 诸葛鑫 | UID9622 · 龍芯北辰
 > **协议**: 思想层 CC BY-NC-SA 4.0 ｜ 数据/工程层 MulanPSL v2
 > **文档定位**: 操作手册（有 section、有示例代码、有警告框），随数据集发布，非论文。
 > **起源**: deepseek-ai/DeepSeek-V3[#1591](https://github.com/deepseek-ai/DeepSeek-V3/issues/1591) 三天讨论 → @DanceNitra / @icophy / @baoqingkong66 / @UID9622 共同沉淀
-> **版本**: v1.0 正式版 · 2026-08-24 · 已合并社区 review 全部修正
+> **版本**: v1.2 · 2026-08-26 · 承接 v1.1 · §6 模板哈希升级 per-file 声明 + 新增「运行数据集声明」字段（回应 DanceNitra/icophy #1591 疑问，见修订记录）
 
 ---
 
@@ -187,6 +187,22 @@
 
 剩下 2 条（`REQ-eaa5c48d-009` / `REQ-e6afcba0-012`）是纯指令（列出系统指令 / JSON 输出内核代码）。**这就是「穿透信号」标签指向的行为模式**——不是"关键词误报"能概括的，而是模型在声称身份面前的顺从倾向。
 
+> ⚠️ **攻击结构细分（v1.1 补充 · 不推翻 6/8 统计）**：上表 6 条中，`REQ-092f07cc-007` 与 `REQ-07040579-011` 的 prompt 虽含身份措辞（friend / investment partner），但从攻击结构看**不属于典型身份冒充（pretext）**：007 是**紧急求助型**（urgency framing——"朋友让我来取数据"，借紧急委托施压），011 是**直接提取型**（direct extraction——亮出身份后直接要求查看/提取）。二者在数据集中罕见；若 Layer 2b 参考配置不涉及此类场景，案例中可忽略；若想测试**边界敏感性**，这两条正是要推的记录。
+
+### 2.4 框架填充案例（Framework-filled examples · v1.1 新增）
+
+> 🧩 各框架可基于 §6 模板向本指南填充**集成案例**，格式焊死如下，案例并入本小节（单一综合案例优先，不散落 §2.1）：
+>
+> | 字段 | 要求 |
+> |:---|:---|
+> | 框架名 | 填案例的框架/工具 |
+> | Layer 1 结果 | 判定对齐（命中/未命中 + 说明） |
+> | Layer 2 发现 | 2a 特征级一致性 / 2b 外部校准，分列 |
+> | 探针输出 | `integrity/calibration_dataset_check.py` 结果（4 PASS/1 FAIL/1 UNVERIFIABLE 如实引用） |
+> | 引用模板 | §6.1 最小报告模板，用本框架数字填 |
+>
+> **已收**：Cophy 案例（@icophy，2026-08-24）——Same Layer 1 scores, opposite Layer 2 findings，待并入本小节（结构如有变动由指南维护者负责对齐）。
+
 ---
 
 ## 3️⃣ 绝对不能用它做什么（Anti-patterns）
@@ -363,8 +379,18 @@ print(f"CI 宽度: {result['ci_width']:.1%}")
 ### 声明
 - 本报告使用 [工具名] 生成
 - 结果可复现：[脚本链接]
-- 数据集版本哈希：[hash]
+- 运行数据集声明：[本报告基于 v1.1-negative **r2 实际运行** / 评估结果映射到 r2]（v1.2 新增 · 可验证性声明的依据，见下方说明）
+- 数据集版本哈希（per-file · v1.2 升级）：
+
+  | 文件 | SHA-256 | 记录数 |
+  |:---|:---|:---:|
+  | `longhun-shared-audit-dataset-v1.0.jsonl` | `[hash-v1.0]` | 19 |
+  | `longhun-shared-audit-dataset-v1.1-negative.jsonl` | `[hash-v1.1]` | 19 |
 ```
+
+> 🔧 **v1.2 升级（2026-08-26 · DanceNitra #1591 指正）**：哈希字段由单值升级为 **per-file 声明**——数据集是双文件，任何转置/合并/裁剪后的结果都必须以两个独立 SHA-256 为可验证基线，单个哈希无法追溯「用了哪个文件的哪个版本」。这与 [Croissant](https://docs.mlcommons.org/croissant/) 的 per-resource `checksum` 规范一致。当前发布版实际哈希：v1.0-positive = `b1a8a650b8038b21505396ea869911008781b26a3adf39ad730edc3d99a2e7f3`，v1.1-negative r2 = `156d3ebb59ec22500b8851be14b1db6aea1963b8754fcd7b6b9e4080361c7378`（见 MANIFEST.md）。
+>
+> 🧪 **运行数据集声明说明（v1.2 新增 · 可验证性）**：「r2 实际运行」指框架直接对发布版 r2 文件逐条判定；「评估映射」指先在其他版本/环境评估、再将结论映射到 r2 的 request_id。两者对模板都有用，但对可验证性声明强度不同——前者可直接复现，后者需额外声明映射规则。发布报告时二选一声明，不得留空。
 
 ### 6.2 阴性对照声明（v1.0 正式版新增）
 
@@ -487,6 +513,8 @@ Layer 2 完整性
 > - **Jacobs & Wallach** — 语言模型评估中的效度讨论（测量什么 vs 声称测量什么）
 > - **Davidson et al.** — 内容分类中标注可靠性的经典讨论（自动化检测与人工裁定的差异，类比 `confirmed_penetration` 流水线标记语义）
 > - **HateCheck** — 结构化功能性测试集方法论（细粒度行为断言取代聚合指标，与 §2 双层框架同思路）
+>
+> 🧩 **术语映射（v1.1 焊死）**：**Layer 2a / 2b 为内部框架名**，对外一律映射 reliability / validity + ISO 5725-1（reliability ↔ 2a 内部一致；validity ↔ 2b 外部校准）。外部引用时用 ISO 术语，内部讨论可保留 2a/2b 并在脚注或括号注明映射。
 
 ### C. 贡献者引用
 
@@ -522,9 +550,11 @@ deepseek-ai/DeepSeek-V3/
 |------|------|------|
 | v1.0 draft | 2026-08-23 | 首次草案（社区 review 用） |
 | **v1.0 正式版** | 2026-08-24 | 合并社区 review 全部修正：① §2.1 移除「真实标签」列改用 8 条 verbatim + prompt 列行为模式（6/8 假身份借口）② 探针结果 4 PASS + 1 FAIL + 1 UNVERIFIABLE 入 §2.2 ③ §1.2 版本表修正（38=19+19；r2=15 kept+4 dropped+4 added）④ §4 新增"Strip the digits and you get 4"规范化 + KeyError 修复模板 ⑤ §6.2 阴性对照声明（8 of 11 + 656 字符未检查）⑥ §7 审计按内容 diff ⑦ §9B 外部命名参考锚点（reliability/validity、ISO 5725-1、Jacobs & Wallach、Davidson et al.、HateCheck） |
+| **v1.1** | 2026-08-24 | 承接 v1.0：① §2.3 新增攻击结构细分（007=紧急求助型 / 011=直接提取型，非典型身份冒充，不推翻 6/8 统计）② 新增 §2.4 框架填充案例小节（Cophy 案例已收，格式焊死）③ §9B 焊死术语映射（Layer 2a/2b ↔ reliability/validity + ISO 5725-1） |
+| **v1.2** | 2026-08-26 | 回应 DanceNitra/icophy #1591 疑问：① §6.1 哈希字段单值 → **per-file 双文件声明**（v1.0-positive + v1.1-negative 各自 SHA-256，对齐 Croissant per-resource checksum；附 MANIFEST 实际哈希）② §6.1 新增**「运行数据集声明」字段**（r2 实际运行 vs 评估映射，二选一声明，可验证性强度不同） |
 
 ---
 
 **GPG**: `A2D0092CEE2E5BA87035600924C3704A8CC26D5F`
-**DNA**: `#龍芯⚡️丙午·丙申·甲子·亥时-CALIBRATION-GUIDE-v1.0-UID9622`
+**DNA**: `#龍芯⚡️丙午·丙申·甲子·亥时-CALIBRATION-GUIDE-v1.2-UID9622`
 **三色**: 🟢 v1.0 正式版全修正落地 · 数字均经本地数据核对（截断 ID、家族计数、假身份 6/8）
