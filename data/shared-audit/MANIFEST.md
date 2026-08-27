@@ -5,7 +5,7 @@
 > **归属名**: 诸葛鑫 | UID9622 · 龍芯北辰
 > **验证**: `python3 integrity/calibration_dataset_check.py --data-dir data/shared-audit`
 
-<!-- MANIFEST-META: {"manifest_version":"1.1","files":{"longhun-shared-audit-dataset-v1.0.jsonl":{"count":19,"file_sha256":"a6f9cbe8e3a96e8b0ba9bd0cd124dc86898358395848d64e562022fa489258ca","merkle_root":"4d7f8669b0c626839146e23e4a5b539bc472585936d9f4c3b19399678b4bd604"},"longhun-shared-audit-dataset-v1.1-negative.jsonl":{"count":19,"file_sha256":"5af2f320310f01535d2bbfb9b0ef9f5ae7af8c4583bcaadc173d17ea361b281e","merkle_root":"c64fa70c85ee7332632765908088eccd411bf5baa3823d7513496a2ba93fa33b"}},"total_count":38,"total_merkle_root":"27aa9ec0c8468fbbec9e8fed62c466e5a70762990b2b219153debcc7e1f3e952","hash_scheme":{"record_hash":"SHA-256 of canonical JSON (sort_keys=True, ensure_ascii=False, separators=(',',':')) excluding the record_hash field itself","leaf":"SHA-256(record_hash_bytes)","internal":"SHA-256(left||right); odd level duplicates last"}} -->
+<!-- MANIFEST-META: {"manifest_version":"1.1","files":{"longhun-shared-audit-dataset-v1.0.jsonl":{"count":19,"file_sha256":"a6f9cbe8e3a96e8b0ba9bd0cd124dc86898358395848d64e562022fa489258ca","merkle_root":"4d7f8669b0c626839146e23e4a5b539bc472585936d9f4c3b19399678b4bd604"},"longhun-shared-audit-dataset-v1.1-negative.jsonl":{"count":19,"file_sha256":"5af2f320310f01535d2bbfb9b0ef9f5ae7af8c4583bcaadc173d17ea361b281e","merkle_root":"c64fa70c85ee7332632765908088eccd411bf5baa3823d7513496a2ba93fa33b"}},"total_count":38,"total_merkle_root":"27aa9ec0c8468fbbec9e8fed62c466e5a70762990b2b219153debcc7e1f3e952","hash_scheme":{"record_hash":"SHA-256 of UTF-8 bytes of canonical JSON string: json.dumps(sort_keys=True, ensure_ascii=False, separators=(',',':')).encode('utf-8'), excluding the record_hash field itself","leaf":"SHA-256(record_hash_bytes)","internal":"SHA-256(left||right); odd level duplicates last","encoding":"UTF-8 explicit — cross-language reproducers must encode the canonical JSON string as UTF-8 bytes before digest; Python default is UTF-8 but other runtimes (Go/Java/Rust) must specify explicitly"}} -->
 
 ---
 
@@ -23,7 +23,8 @@
 ```
 
 **哈希方案（可复现，探针脚本同一实现）**：
-- `record_hash` = SHA-256(规范化 JSON) —— 规范化 = `json.dumps(sort_keys=True, ensure_ascii=False, separators=(',',':'))`，**排除 `record_hash` 字段自身**（自引用无关，加字段不改自己的哈希）
+- `record_hash` = SHA-256(**规范化 JSON 的 UTF-8 字节**) —— 规范化 = `json.dumps(sort_keys=True, ensure_ascii=False, separators=(',',':')).encode('utf-8')`，**排除 `record_hash` 字段自身**（自引用无关，加字段不改自己的哈希）
+  > **编码注（跨语言复现必读）**：最终 SHA-256 的输入是 **UTF-8 字节串**。Python 中 `.encode('utf-8')` 即默认行为；**Go / Java / Rust 等实现须显式指定 UTF-8 编码**，否则哈希无法复现。`ensure_ascii=False` 保留 Unicode 原字符（如 `🐉`），编码后为对应 UTF-8 多字节序列。
 - Merkle 叶 = SHA-256(record_hash_bytes)；内部节点 = SHA-256(左‖右)；奇数层复制末叶；按文件顺序 + 行序
 - 探针脚本 `integrity/calibration_dataset_check.py`（stdlib only）从本文件 META 块读期望值，任何人不依赖我们自报即可独立复算
 
@@ -70,5 +71,6 @@
 |:---|:---|:---|:---|
 | v1.0 | 2026-08-19 | 首版 | 单文件哈希，19 条 |
 | v1.1 | 2026-08-26 | 🔥 **逐条 `record_hash`（38 条）** + **Merkle 根（文件级 + 全量 38）** + **per-file 双文件哈希** + 机器可读 META 块 | 每条记录独立 SHA-256，改任一行可精确定位；Merkle 根防篡改证明；探针脚本 + CI 机器守门。原有字段值一律未改，仅追加 `record_hash` 字段 |
+| v1.1-annotate | 2026-08-27 | 🔧 **UTF-8 编码注显式化** + **CHANGELOG git-SHA 锚定** | hash_scheme 及 META 块补充 UTF-8 编码说明（跨语言复现必读）；CHANGELOG.jsonl 追加 `v1.1-annotate` 条目含 `git_sha_map`，对齐账本标签与 git 历史；修正 v1.1-r2 条目描述中的剔除记录 ID（REQ-NEG-25890147-027→019）|
 
 > 变更全程记录于 `CHANGELOG.jsonl`（append-only），GPG 签名文件与源文件同目录发布。
